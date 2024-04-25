@@ -5,11 +5,11 @@ import numpy as np
 class MakerAgent(mesa.Agent):
     """An agent in the FabLabs ecosystem"""
     MIN_QUALITY = 1
-    MAX_QUALITY = 3
+    MAX_QUALITY = 2
     MIN_FEE = 1
-    MAX_FEE = 3
+    MAX_FEE = 2
     MIN_SUS = 1
-    MAX_SUS = 3
+    MAX_SUS = 2
 
 
 

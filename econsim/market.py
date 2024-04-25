@@ -1,7 +1,7 @@
 import numpy as np
 
 from .work import Work
-from .utils import norml
+from .utils import norml, get_debug
 
 class Market():
 
@@ -15,8 +15,8 @@ class Market():
             raise Exception(f"Quality weight needs to be non negative and less than 1 in abs value, iso {quality_weight}")
         elif sustainability_weight < 0 or abs(sustainability_weight) > 1:
             raise Exception(f"Sustainability weight needs to be non negative and less than 1 in abs value, iso {sustainability_weight}")
-        elif abs(price_weight) +  abs(quality_weight) + abs(sustainability_weight) > 3:
-            raise Exception(f"Sum of abs weight values needs to be less than 3, iso {abs(price_weight) +  abs(quality_weight) + abs(sustainability_weight)}")
+        elif abs(price_weight) +  abs(quality_weight) + abs(sustainability_weight) > 1:
+            raise Exception(f"Sum of abs weight values needs to be less than 1, iso {abs(price_weight) +  abs(quality_weight) + abs(sustainability_weight)}")
         
         self.weights = [price_weight, quality_weight, sustainability_weight]
         self.threshold = threshold
@@ -64,8 +64,10 @@ class Market():
                 max_score = score
                 chosen_id = prod_id
 
-        # print(max_score)
+        
         if max_score > self.threshold:
+            if get_debug():
+                print(f"max score: {max_score}, threshold: {self.threshold}, weights: {self.weights}")
             return chosen_id
         return None
     

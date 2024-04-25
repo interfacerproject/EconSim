@@ -1,4 +1,5 @@
 
+from econsim.utils import get_debug
 
 class Resources():
     initial_amount = 0
@@ -30,7 +31,8 @@ class Resources():
     def resourses_available(cls):
         if cls.current_amount < 0:
             # breakpoint()
-            print("Resources depleted")
+            if get_debug():
+                print("Resources depleted")
             return False
         return True
 

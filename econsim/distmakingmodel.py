@@ -8,7 +8,7 @@ from .producer import Producer
 from .makeragent import MakerAgent
 from .serviceprovider import ServiceProvider
 from .market import Market
-from .utils import compute_gini
+from .utils import compute_gini, get_debug
 from .resources import Resources
 
 def nr_designs_in_progress(model):
@@ -56,7 +56,7 @@ class DistMakingModel(mesa.Model):
     DESIGNERS_OFFSET = 0
     PRODUCERS_OFFSET = 100000
 
-    def __init__(self, designers, producers, initial_wealth, living_cost, weights, threshold, competition, resources_amount, quality_ratio=None):
+    def __init__(self, designers=20, producers=5, initial_wealth=10, living_cost=0.1, weights=[-1/3,1/3,1/3], threshold=0.1, competition=10, resources_amount=500, quality_ratio=None):
         super().__init__()
         
         # breakpoint()
@@ -65,6 +65,10 @@ class DistMakingModel(mesa.Model):
             
             sustainability_weight = round(rest*(1-quality_ratio),1)
             quality_weight = round(rest*(quality_ratio),1)
+
+            rest = 1 - (weights + quality_weight + sustainability_weight)
+            quality_weight += rest/2
+            sustainability_weight += rest/2
             
             weights = [-weights, quality_weight, sustainability_weight]
 
@@ -115,7 +119,7 @@ class DistMakingModel(mesa.Model):
                              "Resources": get_amount_resources,
                             },
             agent_reporters={"Wealth": "wealth",
-                             "Work": "worked_hours",
+                            #  "Work": "worked_hours",
                              "Skill": "quality_level",
                              "Fee": "hour_fee",
                              "Sustainability": "sustainability_level",
@@ -131,7 +135,8 @@ class DistMakingModel(mesa.Model):
         self.market.step()
 
         if not self.alive_professionals():
-            print("Professionals starved, terminating")
+            if get_debug():
+                print("Professionals starved, terminating")
             self.running = False
         
         
@@ -164,4 +169,7 @@ class DistMakingModel(mesa.Model):
                 return agent
         return(None)
 
+    def run_model(self, step_count=200):
+        for i in range(step_count):
+            self.step()
     

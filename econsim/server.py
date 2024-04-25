@@ -5,6 +5,7 @@ from econsim.serviceprovider import ServiceProvider
 from econsim.resources import Resources
 
 from econsim.distmakingmodel import DistMakingModel
+from econsim.utils import generate_ranges
 
 
 def agent_portrayal(agent):
@@ -70,30 +71,9 @@ agent_chart = mesa.visualization.BarChartModule(
         # {"Label": "Sold Products", "Color": "#2b83ba"},
     ]
 )
-import solara
-from matplotlib.figure import Figure
 
-def wealth_histogram(model):
-    # Note: you must initialize a figure using this method instead of
-    # plt.figure(), for thread safety purpose
-    fig = Figure()
-    ax = fig.subplots()
-    wealth_vals = [agent.wealth for agent in model.schedule.agents]
-    # Note: you have to use Matplotlib's OOP API instead of plt.hist
-    # because plt.hist is not thread-safe.
-    ax.hist(wealth_vals, bins=10)
-    solara.FigureMatplotlib(fig)
+_range_weights, price_weight, quality_ratio, range_living_cost, range_threshold, range_resources = generate_ranges(1)
 
-
-price_weight = [x / 10.0 for x in range(0, 11, 2)]
-quality_ratio = [x / 10.0 for x in range(0, 11, 2)]
-
-
-# range_price_weight = [x / 10.0 for x in range(2, 6, 1)]
-range_living_cost = [x / 10.0 for x in range(1, 11, 2)]
-range_threshold = [x / 10.0 for x in range(1, 11, 2)]
-range_competition = range(0, 5, 1)
-range_resources = range(500, 10000, 500)
 
 
 model_params = {
@@ -106,8 +86,7 @@ model_params = {
     "weights": mesa.visualization.Slider("Weight of price", min(price_weight),min(price_weight),max(price_weight),0.1),
     "quality_ratio": mesa.visualization.Slider("Ratio quality/sustainability", min(quality_ratio), min(quality_ratio),max(quality_ratio),0.1),
     "living_cost": mesa.visualization.Slider("Cost of Living", min(range_living_cost), min(range_living_cost),max(range_living_cost),0.1),
-    "threshold": mesa.visualization.Slider("Threshold to buy",min(range_threshold),min(range_threshold),max(range_threshold),0.1),
-    "competition": mesa.visualization.Slider("Min products on sale", 1,0,5,1),    
+    "threshold": mesa.visualization.Slider("Threshold to buy",min(range_threshold),min(range_threshold),max(range_threshold),0.1)
 }
 
 server = mesa.visualization.ModularServer(
