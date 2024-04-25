@@ -1,7 +1,8 @@
 
 
 class Resources():
-    amount = 0
+    initial_amount = 0
+    current_amount = 0
     max_sustainability = 0
 
     @classmethod
@@ -13,7 +14,7 @@ class Resources():
 
     @classmethod
     def get_amount_resources(cls):
-        return cls.amount
+        return cls.current_amount
     
 
     @classmethod
@@ -27,7 +28,7 @@ class Resources():
 
     @classmethod
     def resourses_available(cls):
-        if cls.amount < 0:
+        if cls.current_amount < 0:
             # breakpoint()
             print("Resources depleted")
             return False

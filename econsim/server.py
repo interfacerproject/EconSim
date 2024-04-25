@@ -51,9 +51,19 @@ product_chart = mesa.visualization.ChartModule(
         {"Label": "Sold Products", "Color": "#2b83ba"},
     ]
 )
-agent_chart = mesa.visualization.ChartModule(
+resources_chart = mesa.visualization.ChartModule(
     [
-        {"Label": "Gini", "Color": "#0000a2"},
+        {"Label": "Resources", "Color": "#0000a2"},
+        # {"Label": "Realized Designs", "Color": "#bc272d"},
+        # {"Label": "Products in Progress", "Color": "#e9c716"},
+        # {"Label": "On-sale Products", "Color": "#50ad9f"},
+        # {"Label": "Sold Products", "Color": "#2b83ba"},
+    ]
+)
+agent_chart = mesa.visualization.BarChartModule(
+    scope="agent",
+    fields = [
+        {"Label": "Wealth", "Color": "#0000a2"},
         # {"Label": "Realized Designs", "Color": "#bc272d"},
         # {"Label": "Products in Progress", "Color": "#e9c716"},
         # {"Label": "On-sale Products", "Color": "#50ad9f"},
@@ -92,16 +102,16 @@ model_params = {
     "designers": mesa.visualization.Slider("Designers", 20, 0, 100, 1 ),
     "producers": mesa.visualization.Slider("Producers", 5, 0, 100, 1),
     "initial_wealth": mesa.visualization.Slider("Initial Wealth", 10, 0, 100, 1),
+    "resources_amount": mesa.visualization.Slider("Resources", min(range_resources),min(range_resources),max(range_resources),100),
     "weights": mesa.visualization.Slider("Weight of price", min(price_weight),min(price_weight),max(price_weight),0.1),
-    "quality_ratio": mesa.visualization.Slider("Proportion quality/sustainability", min(quality_ratio), min(quality_ratio),max(quality_ratio),0.1),
+    "quality_ratio": mesa.visualization.Slider("Ratio quality/sustainability", min(quality_ratio), min(quality_ratio),max(quality_ratio),0.1),
     "living_cost": mesa.visualization.Slider("Cost of Living", min(range_living_cost), min(range_living_cost),max(range_living_cost),0.1),
     "threshold": mesa.visualization.Slider("Threshold to buy",min(range_threshold),min(range_threshold),max(range_threshold),0.1),
-    "competition": mesa.visualization.Slider("Min products on sale", 1,0,5,1),
-    "resources_amount": mesa.visualization.Slider("Amount resources", min(range_resources),min(range_resources),max(range_resources),100)
+    "competition": mesa.visualization.Slider("Min products on sale", 1,0,5,1),    
 }
 
 server = mesa.visualization.ModularServer(
-    DistMakingModel, [canvas_element, product_chart, agent_chart, wealth_histogram], "Fair Distribution", model_params
+    DistMakingModel, [product_chart, resources_chart, agent_chart, canvas_element], "Fair Distribution", model_params
     
 )
 server.port = 8522

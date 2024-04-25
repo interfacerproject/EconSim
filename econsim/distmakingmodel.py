@@ -68,10 +68,6 @@ class DistMakingModel(mesa.Model):
             
             weights = [-weights, quality_weight, sustainability_weight]
 
-
-        self.init(designers, producers, initial_wealth, living_cost, weights, threshold, competition, resources_amount)
-                    
-    def init(self, designers, producers, initial_wealth, living_cost, weights, threshold, competition, resources_amount):
         # Parameters for the market
         self.market = Market(weights, threshold, competition)
 
@@ -116,7 +112,7 @@ class DistMakingModel(mesa.Model):
                             #  "Living Cost": get_living_cost,
                             #  "Threshold": get_threshold,
                             #  "Competition": get_competition,
-                            #  "Resources": get_amount_resources,
+                             "Resources": get_amount_resources,
                             },
             agent_reporters={"Wealth": "wealth",
                              "Work": "worked_hours",

@@ -31,3 +31,21 @@ def norml(x):
         den = np.max(x)-np.min(x)
         return (x-np.min(x))/den
 
+
+def generate_ranges(step=1):
+    range_weights = []
+    for price in [x / 10.0 for x in range(0, 11, step)]:
+        for quality in [x / 10.0 for x in range(0, 11, step)]:
+            for sustainabilty in [x / 10.0 for x in range(0, 11, step)]:
+                if price + quality + sustainabilty != 1:
+                    continue
+                else:
+                    range_weights.append([-price, quality, sustainabilty])
+
+    # range_price_weight = [x / 10.0 for x in range(2, 6, 1)]
+    range_living_cost = [x / 10.0 for x in range(1, 11, step)]
+    range_threshold = [x / 10.0 for x in range(1, 11, step)]
+    range_competition = range(0, 5, step)
+    range_resources = range(500, 10000, 500)
+
+    return range_weights, range_living_cost, range_threshold, range_competition, range_resources
