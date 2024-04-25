@@ -81,8 +81,8 @@ class DistMakingModel(mesa.Model):
         self.living_cost = living_cost
         
         self.schedule = mesa.time.RandomActivation(self)
-        # width = int(math.sqrt(designers+producers))+1
-        height = width = 15
+        width = int(math.sqrt(designers+producers))+1
+        height = width
         self.grid = mesa.space.MultiGrid(width, height, torus=True)
         
         # Init the designs
