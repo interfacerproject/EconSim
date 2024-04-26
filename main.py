@@ -1,7 +1,8 @@
 import mesa
 
 from econsim.distmakingmodel import DistMakingModel
-from econsim.utils import generate_ranges, process_batch_results, gen_stats, set_debug
+from econsim.utils import generate_ranges, process_batch_results, gen_stats
+from econsim.globals import set_debug
 
 def main(iterations, max_steps, step):
     range_weights, _price_weight, _quality_ratio, range_living_cost, range_threshold, range_resources = generate_ranges(step)
@@ -30,7 +31,7 @@ def main(iterations, max_steps, step):
     )
 
 
-    ag_res_df, ag_glob_df, product_results_df = process_batch_results(results, DistMakingModel.agent_type)
+    ag_res_df, ag_glob_df, product_results_df = process_batch_results(results)
 
     stats = gen_stats(max_steps, range_weights, range_living_cost, range_threshold, ag_res_df)
 
@@ -60,6 +61,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    parser.add_argument(
+        '-c', '--compensation',
+        dest='compensation',
+        type=int,
+        nargs='?',
+        default=1,
+        help='specifies the method to share profits',
     )
 
     parser.add_argument(

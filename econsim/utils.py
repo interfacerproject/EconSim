@@ -1,14 +1,7 @@
 import numpy as np
 import pandas as pd
 
-_debug = False
-
-def set_debug():
-    global _debug
-    _debug = True
-
-def get_debug():
-    return _debug
+from .globals import PRODUCERS_ID_OFFSET
 
 # # calculate the gini coefficient of inequality
 # def compute_gini(model):
@@ -41,6 +34,14 @@ def norml(x):
         return (x-np.min(x))/den
 
 
+def agent_type(id):
+    if id < PRODUCERS_ID_OFFSET:
+        return("Designer")
+    elif id >= PRODUCERS_ID_OFFSET:
+        return("Producer")
+    else:
+        raise Exception(f"Unkwown class id: {id}")
+
 def generate_ranges(step=1):
     range_weights = []
     for price in [x / 10.0 for x in range(0, 11, step)]:
@@ -61,7 +62,7 @@ def generate_ranges(step=1):
     return range_weights, price_weight, quality_ratio, range_living_cost, range_threshold, range_resources
 
 
-def process_batch_results(results, agent_type):
+def process_batch_results(results):
 
     print(len(results))
     results_df = pd.DataFrame(results)

@@ -1,17 +1,9 @@
 import mesa
 import numpy as np
 
-
+from .globals import MIN_QUALITY, MAX_QUALITY, MIN_SUS, MAX_SUS, MIN_FEE, MAX_FEE
 class MakerAgent(mesa.Agent):
     """An agent in the FabLabs ecosystem"""
-    MIN_QUALITY = 1
-    MAX_QUALITY = 2
-    MIN_FEE = 1
-    MAX_FEE = 2
-    MIN_SUS = 1
-    MAX_SUS = 2
-
-
 
     def __init__(self, unique_id, model, initial_wealth, living_cost):
         # Pass the parameters to the parent class.
@@ -25,11 +17,11 @@ class MakerAgent(mesa.Agent):
         self.worked_hours = 0
         self.working_on_id = None
 
-        self.quality_level = np.random.randint(MakerAgent.MIN_QUALITY,MakerAgent.MAX_QUALITY+1)
-        self.sustainability_level = np.random.randint(MakerAgent.MIN_SUS,MakerAgent.MAX_SUS+1)
-        # self.hour_fee = min(max(self.quality_level+delta_fee,MakerAgent.MIN_FEE),MakerAgent.MAX_FEE)
+        self.quality_level = np.random.randint(MIN_QUALITY,MAX_QUALITY+1)
+        self.sustainability_level = np.random.randint(MIN_SUS,MAX_SUS+1)
+        # self.hour_fee = min(max(self.quality_level+delta_fee,MIN_FEE),MAX_FEE)
         
-        self.hour_fee = min(max(np.mean([self.quality_level, self.sustainability_level]),MakerAgent.MIN_FEE),MakerAgent.MAX_FEE)
+        self.hour_fee = min(max(np.mean([self.quality_level, self.sustainability_level]),MIN_FEE),MAX_FEE)
 
 
    

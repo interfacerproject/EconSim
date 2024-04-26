@@ -1,7 +1,8 @@
 import numpy as np
 
 from .work import Work
-from .utils import norml, get_debug
+from .utils import norml
+from .globals import get_debug
 
 class Market():
 
@@ -43,7 +44,7 @@ class Market():
         id_to_buy = self.pick_product(ids, price_arr, quality_arr, sustainability_arr)
         if id_to_buy != None:
             work_to_buy = Work.work_repository[f'{id_to_buy}']
-            work_to_buy.redistribute_profit(work_to_buy.get_price())
+            work_to_buy.redistribute_profit()
             Work.buy(id_to_buy)
             
 

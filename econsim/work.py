@@ -1,5 +1,7 @@
 import numpy as np
 from .resources import Resources
+from .utils import agent_type
+from .globals import MAX_FEE, MIN_FEE
 
 class Work():
     # list of designs being worked on (being designed)
@@ -23,6 +25,14 @@ class Work():
 
     model = None
 
+    tot_contributors = 0
+    tot_hours = 0
+    tot_hour_fee = 0
+    tot_quality_level = 0
+    tot_sustainability_level = 0
+    tot_material_cost = 0
+
+
     @classmethod
     def init_thingiverse(cls):
         # The following represents a list of real object extracted from Thingiverse
@@ -43,7 +53,7 @@ class Work():
 
         
     @classmethod
-    def init_works(cls, model):
+    def init_works(cls, model, method):
         cls.init_thingiverse()
 
         cls.designs_in_progress = []
@@ -54,10 +64,24 @@ class Work():
         
         cls.current_design_id = np.random.randint(len(cls.design_titles))
         cls.work_repository = {}
-        
-        cls.model = model
 
-        
+        cls.tot_contributors = 0
+        cls.tot_hours = 0
+        cls.tot_hour_fee = 0
+        cls.tot_quality_level = 0
+        cls.tot_sustainability_level = 0
+        cls.tot_material_cost = 0
+
+        cls.model = model
+        if method == 1:
+            cls.method = "producers"
+        elif method == 2:
+            cls.method = "equal"
+        elif method == 3:
+            cls.method = "proportional"
+        else:
+            raise Exception(f"Method {method} is not recognised")
+
     
     @classmethod
     def get_len_designs_in_progress(cls):
@@ -78,6 +102,36 @@ class Work():
     @classmethod
     def get_len_sold_products(cls):
         return(len(cls.sold_products))
+
+    @classmethod
+    def get_avrg_contr_sold_goods(cls):        
+        nr_items = max(len(cls.sold_products),1)
+        return cls.tot_contributors/nr_items
+
+    @classmethod
+    def get_avrg_hours_sold_goods(cls):        
+        nr_items = max(len(cls.sold_products),1)
+        return cls.tot_hours/nr_items
+
+    @classmethod
+    def get_avrg_hour_fees_sold_goods(cls):        
+        nr_items = max(len(cls.sold_products),1)
+        return cls.tot_hour_fee/nr_items
+
+    @classmethod
+    def get_avrg_quality_sold_goods(cls):        
+        nr_items = max(len(cls.sold_products),1)
+        return cls.tot_quality_level/nr_items
+
+    @classmethod
+    def get_avrg_sus_sold_goods(cls):        
+        nr_items = max(len(cls.sold_products),1)
+        return cls.tot_sustainability_level/nr_items
+
+    @classmethod
+    def get_avrg_mat_cost_sold_goods(cls):        
+        nr_items = max(len(cls.sold_products),1)
+        return cls.tot_material_cost/nr_items
 
     @classmethod
     def start_design(cls, agent)-> None:
@@ -150,14 +204,25 @@ class Work():
 
         work.contributors.append(agent.unique_id)
         work.hours.append(agent.worked_hours)
-        work.hour_fee.append(agent.hour_fee)
-        work.quality_level.append(agent.quality_level)
-        work.sustainability_level.append(agent.sustainability_level)
+        work.hour_fees.append(agent.hour_fee)
+        work.quality_levels.append(agent.quality_level)
+        work.sustainability_levels.append(agent.sustainability_level)
 
     @classmethod
     def buy(cls, product_id):
         cls.on_sale_products.remove(product_id)
         cls.sold_products.append(product_id)
+        work = cls.work_repository[f'{product_id}']
+
+        # update totals
+        cls.tot_contributors += len(work.contributors)
+        cls.tot_hours += sum(work.hours)
+        cls.tot_hour_fee += sum(work.hour_fees)
+        cls.tot_quality_level += sum(work.quality_levels)
+        cls.tot_sustainability_level += sum(work.sustainability_levels)
+        cls.tot_material_cost += work.material_cost
+
+
             
     @classmethod
     def calculate_sustainability(cls, agent):
@@ -171,9 +236,9 @@ class Work():
         self.img = img
         self.contributors = []
         self.hours = []
-        self.hour_fee = []
-        self.quality_level = []
-        self.sustainability_level = []
+        self.hour_fees = []
+        self.quality_levels = []
+        self.sustainability_levels = []
         self.status = None
         self.material_cost = 0
 
@@ -183,15 +248,26 @@ class Work():
     def get_quality(self) -> float:
         quality = 0
         for i in range(len(self.hours)):
-            quality = quality + self.hours[i] * self.quality_level[i]
+            quality = quality + self.hours[i] * self.quality_levels[i]
 
         return(quality)
 
     def get_price(self) -> float:
+        """
+            Price is composite of labour cost + material cost
+        """
         price = 0
-        for i in range(len(self.hours)):
-            price = price + self.hours[i]*self.hour_fee[i]
-        
+        if Work.method == "producers":
+            for i in range(len(self.contributors)):
+                if agent_type(i) == "Producer":
+                    price = price + self.hours[i]*self.hour_fees[i]
+        elif Work.method == "equal":
+            for i in range(len(self.contributors)):
+                price = price + (MAX_FEE+MIN_FEE)/2
+        elif Work.method == "proportional":
+            for i in range(len(self.contributors)):
+                price = price + self.hours[i]*self.hour_fees[i]
+
         price += self.material_cost
         
         return(price)
@@ -199,17 +275,32 @@ class Work():
     def get_sustainability(self, hours=True) -> float:
         sustainability = 0
         if hours:
-            for i in range(len(self.sustainability_level)):
-                sustainability = sustainability + self.hours[i]*self.sustainability_level[i]
+            for i in range(len(self.sustainability_levels)):
+                sustainability = sustainability + self.hours[i]*self.sustainability_levels[i]
         else:
-                sustainability = np.mean(self.sustainability_level)
+                sustainability = np.mean(self.sustainability_levels)
 
         return(sustainability)
     
     def set_status(self, status):
         self.status = status
 
-    def redistribute_profit(self, price):
-        for i, id in enumerate(self.contributors):
-            agent = Work.model.find_agent(id)
-            agent.wealth = agent.wealth + self.hours[i]*self.hour_fee[i]
+    def redistribute_profit(self):
+        """
+            profit is labour cost only, without material cost
+        """
+        # breakpoint()
+        if Work.method == "producers":
+            for i, id in enumerate(self.contributors):
+                agent = Work.model.find_agent(id)
+                if agent_type(id) == "Producer":
+                    agent.wealth = agent.wealth + self.hours[i]*self.hour_fees[i]
+        elif Work.method == "equal":
+            for i, id in enumerate(self.contributors):
+                agent = Work.model.find_agent(id)
+                agent.wealth = agent.wealth + (MAX_FEE+MIN_FEE)/2
+        elif Work.method == "proportional":
+            for i, id in enumerate(self.contributors):
+                agent = Work.model.find_agent(id)
+                agent.wealth = agent.wealth + self.hours[i]*self.hour_fees[i]
+            
