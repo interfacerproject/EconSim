@@ -1,28 +1,35 @@
 import numpy as np
 import pandas as pd
 
+from .globals import get_debug
+
 from .globals import PRODUCERS_ID_OFFSET
 
-# # calculate the gini coefficient of inequality
-# def compute_gini(model):
-#     agent_wealths = [agent.wealth for agent in model.schedule.agents]
-#     x = sorted(agent_wealths)
-#     N = len(model.schedule.agents)
-#     if sum(x) == 0:
-#         set_trace()
-#     B = sum(xi * (N - i) for i, xi in enumerate(x)) / (N * sum(x))
-#     return 1 + (1 / N) - 2 * B
-
-def compute_gini(model)->float:
+# calculate the gini coefficient of inequality
+def compute_gini(model):
     agent_wealths = [agent.wealth for agent in model.schedule.agents]
-    x = np.sort(agent_wealths)
-    N = len(x)
-    cumx = np.cumsum(x, dtype=float)
-    if cumx[-1] == 0:
-        # set_trace()
-        return 0.0
-    # Formula when all weights are equal to 1
-    return (N + 1 - 2 * np.sum(cumx) / cumx[-1]) / N
+    x = sorted(agent_wealths)
+    N = len(model.schedule.agents)
+    if sum(x) == 0:
+        if get_debug():
+            print("Sum of agents Wealth is zero")
+        return 0
+    B = sum(xi * (N - i) for i, xi in enumerate(x)) / (N * sum(x))
+
+    res = max(0, min(1,1 + (1 / N) - 2 * B))
+    return res
+
+# def compute_gini(model)->float:
+#     agent_wealths = [agent.wealth for agent in model.schedule.agents]
+#     x = np.sort(agent_wealths)
+#     N = len(x)
+#     cumx = np.cumsum(x, dtype=float)
+#     if cumx[-1] == 0:
+#         # set_trace()
+#         return 0.0
+#     # Formula when all weights are equal to 1
+#     res = max(0, min(1,(N + 1 - 2 * np.sum(cumx) / cumx[-1]) / N))
+#     return res
 
 def norml(x):
     # set_trace()

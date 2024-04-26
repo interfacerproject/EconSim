@@ -1,5 +1,5 @@
 
-from .globals import get_debug
+from .globals import get_debug, EPS
 
 class Resources():
     initial_amount = 0
@@ -22,7 +22,11 @@ class Resources():
     def calculate_depletion(cls, design_sustainability, product_sustainability):
         # breakpoint()
         comsumption = cls.max_sustainability -(design_sustainability+product_sustainability)/2
-        cost = comsumption / (cls.current_amount/cls.initial_amount)
+        if cls.current_amount <= 0:
+             det = EPS 
+        else:
+             det = cls.current_amount
+        cost = comsumption / (det/cls.initial_amount)
         cls.current_amount = max(cls.current_amount - comsumption,0)
         if get_debug():
                 print(f"Cost depletion: {cost}")

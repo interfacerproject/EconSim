@@ -76,7 +76,7 @@ class DistMakingModel(mesa.Model):
                              "Resources": Resources.get_amount_resources,
                              "Contributors" : Work.get_avrg_contr_sold_goods,
                              "Hours": Work.get_avrg_hours_sold_goods,
-                             "Hour Fees": Work.get_avrg_hour_fees_sold_goods,
+                             "Price": Work.get_avrg_prices_sold_goods,
                              "Quality": Work.get_avrg_quality_sold_goods,
                              "Sustainability": Work.get_avrg_sus_sold_goods,
                              "Material Cost": Work.get_avrg_mat_cost_sold_goods

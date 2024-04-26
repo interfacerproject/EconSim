@@ -27,7 +27,7 @@ class Work():
 
     tot_contributors = 0
     tot_hours = 0
-    tot_hour_fee = 0
+    tot_prices = 0
     tot_quality_level = 0
     tot_sustainability_level = 0
     tot_material_cost = 0
@@ -67,7 +67,7 @@ class Work():
 
         cls.tot_contributors = 0
         cls.tot_hours = 0
-        cls.tot_hour_fee = 0
+        cls.tot_prices = 0
         cls.tot_quality_level = 0
         cls.tot_sustainability_level = 0
         cls.tot_material_cost = 0
@@ -114,9 +114,9 @@ class Work():
         return cls.tot_hours/nr_items
 
     @classmethod
-    def get_avrg_hour_fees_sold_goods(cls):        
+    def get_avrg_prices_sold_goods(cls):        
         nr_items = max(len(cls.sold_products),1)
-        return cls.tot_hour_fee/nr_items
+        return cls.tot_prices/nr_items
 
     @classmethod
     def get_avrg_quality_sold_goods(cls):        
@@ -178,7 +178,7 @@ class Work():
         # set_trace()
         work = cls.work_repository[f'{agent.working_on_id}']
         # set_trace()
-        work.material_cost = Resources.calculate_depletion(work.calculate_sustainability(agent), agent.sustainability_level)
+        work.material_cost = Resources.calculate_depletion(work.get_sustainability(hours=False), agent.sustainability_level)
         cls.products_in_progress.remove(agent.working_on_id)
         cls.on_sale_products.append(agent.working_on_id)
         work.set_status("produced")
@@ -217,19 +217,14 @@ class Work():
         # update totals
         cls.tot_contributors += len(work.contributors)
         cls.tot_hours += sum(work.hours)
-        cls.tot_hour_fee += sum(work.hour_fees)
+        cls.tot_prices += work.get_price()
         cls.tot_quality_level += sum(work.quality_levels)
         cls.tot_sustainability_level += sum(work.sustainability_levels)
         cls.tot_material_cost += work.material_cost
 
 
-            
-    @classmethod
-    def calculate_sustainability(cls, agent):
-        work = cls.work_repository[f'{agent.working_on_id}']
-        return work.get_sustainability(hours=False)
-    
-                                 
+        
+                              
     def __init__(self, id, title, img):
         self.id = id
         self.title = title

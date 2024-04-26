@@ -8,6 +8,7 @@ MAX_FEE = 2
 MIN_SUS = 1
 MAX_SUS = 2
 
+EPS = 10e-5
 
 _debug = False
 
