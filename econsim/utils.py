@@ -57,8 +57,8 @@ def gen_range(minv, maxv, nr_steps):
 
 def generate_ranges(weight_array=True):
 
-    range_living_cost = [x / 10.0 for x in gen_range(1,10,5)]
-    range_threshold = [x / 10.0 for x in gen_range(-40, 40, 8)]
+    range_living_cost = [x / 10.0 for x in gen_range(1,3,3)]
+    range_threshold = [x / 10.0 for x in gen_range(-40, 50, 8)]
     # range_threshold = [1]
     range_resources = gen_range(500, 4000, 5)
     

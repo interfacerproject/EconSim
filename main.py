@@ -40,7 +40,8 @@ def main(iterations, max_steps, step, method):
     gc.collect()
     
     score_df = process_batch_results(results_df, "Score")
-
+    print(f"Min score: {min(score_df['Max Score']['min'])}, max score: {max(score_df['Max Score']['max'])}")
+    
     price_weights = set([price_weight for price_weight, _quality_weight, _sustainability_weight in range_weights])
     for resources_amount in range_resources:
         for price_weight in price_weights:
@@ -53,29 +54,32 @@ def main(iterations, max_steps, step, method):
             print(f"For resources_amount: {resources_amount}, price_weight: {price_weight}")
             print(f"Min: {min(slice['Max Score']['min'])}, max: {max(slice['Max Score']['max'])}")
     
-    breakpoint()
+    # breakpoint()
     del score_df
     gc.collect()
     
     
     ag_res_df = process_batch_results(results_df,slice="Agents")
 
-    stats = gen_stats(max_steps, range_weights, range_living_cost, range_threshold, ag_res_df)
+    gen_stats(max_steps, range_weights, range_living_cost, range_threshold, ag_res_df)
 
 
-    breakpoint()
-    prod_df = ag_res_df.loc[(ag_res_df['AgentType'] == 'Producer') & (ag_res_df['Step'] == max_steps)]
-    for skill in [1,2,3]:
-        for sus in [1,2,3]:
-            for fee in [1,2,3]:
-                for cost in range_living_cost:
-                    slice = prod_df.loc[(prod_df['Skill'] == skill) & (prod_df['Sustainability'] == sus) & (prod_df['Fee'] == fee) & (prod_df['living_cost'] == cost)]
-                
+    # breakpoint()
+    end_df = ag_res_df.loc[(ag_res_df['Step'] == max_steps)]
+    for ag in ['Producer', 'Designer']:
+        a_df = end_df.loc[(ag_res_df['AgentType'] == ag)]
+        print(f"Agent type: {ag}")
+        for skill in [1,2]:
+            for sus in [1,2]:
+                slice = a_df.loc[(a_df['Skill'] == skill) & (a_df['Sustainability'] == sus)]
+                if len(slice) == 0:
+                    print(f"No survivors for skill: {skill}, Sustenaibility: {sus}")
+                    continue  
+                mw = max(slice['Wealth'])
+                print(f"Skill: {skill}, Sustenaibility: {sus}")
+                print(slice.loc[(slice['Wealth'] >= mw*.9)])
 
-
-    prod_df = ag_res_df.loc[(ag_res_df['AgentType'] == 'Producer') & (ag_res_df['Skill'] == 1) & (ag_res_df['Sustainability'] == 3) & (ag_res_df['Fee'] == 1) & (ag_res_df['Step'] == max_steps)] 
-
-    ag_res_df.loc[(ag_res_df['AgentType'] == 'Producer') & (ag_res_df['Skill'] == 1) & (ag_res_df['Sustainability'] == 3) & (ag_res_df['Fee'] == 1) & (ag_res_df['Step'] == max_steps)] 
+    # breakpoint()
 
 
 
