@@ -8,9 +8,9 @@ from .producer import Producer
 from .makeragent import MakerAgent
 from .serviceprovider import ServiceProvider
 from .market import Market
-from .utils import compute_gini, agent_type
+from .utils import compute_gini, agent_type, gen_weights
 from .resources import Resources
-from .globals import get_debug, PRODUCERS_ID_OFFSET, DESIGNERS_ID_OFFSET, MAX_SUS
+from .globals import get_debug, PRODUCERS_ID_OFFSET, DESIGNERS_ID_OFFSET
 
 
 
@@ -24,21 +24,13 @@ class DistMakingModel(mesa.Model):
         
         # breakpoint()
         if quality_ratio != None:
-            rest = 1 - weights
             
-            sustainability_weight = round(rest*(1-quality_ratio),1)
-            quality_weight = round(rest*(quality_ratio),1)
-
-            rest = 1 - (weights + quality_weight + sustainability_weight)
-            quality_weight += rest/2
-            sustainability_weight += rest/2
-            
-            weights = [-weights, quality_weight, sustainability_weight]
+            weights = gen_weights(weights, quality_ratio)
 
         # Parameters for the market
         self.market = Market(weights, threshold, competition)
 
-        Resources.init(resources_amount, MAX_SUS)
+        Resources.init(resources_amount)
         
         self.initial_wealth = initial_wealth
         self.living_cost = living_cost
@@ -79,7 +71,8 @@ class DistMakingModel(mesa.Model):
                              "Price": Work.get_avrg_prices_sold_goods,
                              "Quality": Work.get_avrg_quality_sold_goods,
                              "Sustainability": Work.get_avrg_sus_sold_goods,
-                             "Material Cost": Work.get_avrg_mat_cost_sold_goods
+                             "Material Cost": Work.get_avrg_mat_cost_sold_goods,
+                             "Max Score": Market.get_max_score
                             },
             agent_reporters={"Wealth": "wealth",
                             #  "Work": "worked_hours",
@@ -115,14 +108,14 @@ class DistMakingModel(mesa.Model):
                     producers_alive = True
             if (designers_alive and producers_alive):
                 return True
-        return(designers_alive and producers_alive)
+        return (designers_alive and producers_alive)
 
 
     def find_agent(self, id):
         for agent in self.schedule.agents:
             if agent.unique_id == id:
                 return agent
-        return(None)
+        return None
 
     def run_model(self, step_count=200):
         for i in range(step_count):

@@ -1,17 +1,15 @@
 
-from .globals import get_debug, EPS
+from .globals import get_debug, EPS, MAX_SUS, MIN_SUS
 
 class Resources():
     initial_amount = 0
     current_amount = 0
-    max_sustainability = 0
 
     @classmethod
-    def init(cls, initial_amount, max_sustainability):
+    def init(cls, initial_amount):
         # breakpoint()
         cls.initial_amount = initial_amount
         cls.current_amount = cls.initial_amount
-        cls.max_sustainability = max_sustainability
 
     @classmethod
     def get_amount_resources(cls):
@@ -19,9 +17,15 @@ class Resources():
     
 
     @classmethod
-    def calculate_depletion(cls, design_sustainability, product_sustainability):
+    def calculate_depletion(cls, work, producer):
         # breakpoint()
-        comsumption = cls.max_sustainability -(design_sustainability+product_sustainability)/2
+        if producer.worked_hours == 0:
+            #  producer is evaluating whether the design can be produced
+            sus_level = (work.get_sustainability()/work.get_hours() + (MAX_SUS + MIN_SUS)/2 + producer.sustainability_level)/2
+        else:
+            #  producer is already one of the contributors
+            sus_level = work.get_sustainability()/work.get_hours() + (MAX_SUS + MIN_SUS)/2
+        comsumption = (MAX_SUS - sus_level) 
         if cls.current_amount <= 0:
              det = EPS 
         else:

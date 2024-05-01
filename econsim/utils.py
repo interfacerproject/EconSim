@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import gc
 
 from .globals import get_debug
 
@@ -43,88 +44,132 @@ def norml(x):
 
 def agent_type(id):
     if id < PRODUCERS_ID_OFFSET:
-        return("Designer")
+        return "Designer"
     elif id >= PRODUCERS_ID_OFFSET:
-        return("Producer")
+        return "Producer"
     else:
         raise Exception(f"Unkwown class id: {id}")
 
-def generate_ranges(step=1):
-    range_weights = []
-    for price in [x / 10.0 for x in range(0, 11, step)]:
-        for quality in [x / 10.0 for x in range(0, 11, step)]:
-            for sustainabilty in [x / 10.0 for x in range(0, 11, step)]:
-                if price + quality + sustainabilty != 1:
-                    continue
-                else:
-                    range_weights.append([-price, quality, sustainabilty])
-
-    # range_price_weight = [x / 10.0 for x in range(2, 6, 1)]
-    price_weight = [x / 10.0 for x in range(0, 11, step)]
-    quality_ratio = [x / 10.0 for x in range(0, 11, step)]
-    range_living_cost = [x / 10.0 for x in range(1, 11, step)]
-    range_threshold = [x / 10.0 for x in range(1, 11, step)]
-    range_resources = range(500, 10000, 500)
-
-    return range_weights, price_weight, quality_ratio, range_living_cost, range_threshold, range_resources
+def gen_range(minv, maxv, nr_steps):
+    step = int((maxv+1-minv)/nr_steps)
+    return range(minv, maxv+1, step)
 
 
-def process_batch_results(results):
+def generate_ranges(weight_array=True):
 
-    print(len(results))
+    range_living_cost = [x / 10.0 for x in gen_range(1,10,5)]
+    range_threshold = [x / 10.0 for x in gen_range(-40, 40, 8)]
+    # range_threshold = [1]
+    range_resources = gen_range(500, 4000, 5)
+    
+    if weight_array:
+        range_weights = []
+        for price in [x / 10.0 for x in gen_range(1, 10, 3)]:
+            for quality in [x / 10.0 for x in range(0, 11)]:
+                for sustainabilty in [x / 10.0 for x in range(0, 11)]:
+                    if price + quality + sustainabilty != 1:
+                        continue
+                    else:
+                        range_weights.append([-price, quality, sustainabilty])
+        # breakpoint()
+        print(f"Parameters Combinations: {len(range_living_cost)*len(range_threshold)*len(range_resources)*len(range_weights)}")
+        return range_weights, range_living_cost, range_threshold, range_resources
+
+    # breakpoint()
+    else:
+        price_weight = [x / 10.0 for x in range(1, 11)]
+        quality_ratio = [x / 10.0 for x in range(0, 11)]
+
+        # print(f"Parameters Combinations: {len(range_living_cost)*len(range_threshold)*len(range_resources)*len(price_weight)*len(quality_ratio)}")
+        return price_weight, quality_ratio, range_living_cost, range_threshold, range_resources
+
+
+def gen_weights(price_weight, quality_ratio):
+    rest = 1 - price_weight
+            
+    sustainability_weight = round(rest*(1-quality_ratio),1)
+    quality_weight = round(rest*(quality_ratio),1)
+
+    rest = 1 - (price_weight + quality_weight + sustainability_weight)
+    quality_weight += rest/2
+    sustainability_weight += rest/2
+    
+    weights = [-price_weight, quality_weight, sustainability_weight]
+    return weights
+
+def results_to_df(results):
+
+    print(f"Nr rows in results: {len(results)}")
     results_df = pd.DataFrame(results)
     
     na_cols = results_df.columns[results_df.isna().any()].tolist()
     if na_cols != []:
         print(f"NaN present in {na_cols}")
         results_df = results_df.fillna(0, inplace=True)
-    print(results_df.keys())
+    
+    # make esplicit some parameters
+    results_df["AgentType"], results_df["Alive"], results_df["price_weight"], results_df["quality_weight"], results_df["sustainability_weight"] = \
+    zip(*results_df.apply(lambda row : (agent_type(row['AgentID']),row.Wealth>0, *row.weights), axis=1))
+
+    print(f"Keys in results: {results_df.keys()}")
 
     print(f"Head:\n{results_df.head(5)}")
     print(f"Tail:\n{results_df.tail(5)}")
 
-    results_df["AgentType"], results_df["Alive"], results_df["price_weight"], results_df["quality_weight"], results_df["sustainability_weight"] = \
-        zip(*results_df.apply(lambda row : (agent_type(row['AgentID']),row.Wealth>0, *row.weights), axis=1))
+    return results_df
 
+def process_batch_results(results_df, slice):
 
-    ag_res_df = (
-        results_df.groupby(["Step", "AgentType", "Skill", "Fee", "Sustainability", "living_cost", "price_weight", "quality_weight", "sustainability_weight", "threshold"])
-        .agg({
-            "Wealth": "mean", 
-            # "Work": "mean",
-            "Alive": "mean",
-            })
-        .reset_index()
-    )
+    # we do not consider 'method', 'initial_wealth', designers', 'producers' as these parameters
+    # are not varied during the simulations 
+    if slice == "Agents":
+        ag_df = (
+            results_df.groupby(["Step", "AgentType", "Skill", "Fee", "Sustainability", "living_cost", "resources_amount", "price_weight", "quality_weight", "sustainability_weight", "threshold"])
+            .agg({
+                "Wealth": "mean", 
+                # "Work": "mean",
+                "Alive": "mean",
+                "Resources": "mean",
+                })
+            .reset_index()
+        )
 
-    ag_glob_df = (
-        results_df.groupby(["Step", "living_cost", "price_weight", "quality_weight", "sustainability_weight", "threshold"])
-        .agg({
-            "Gini": "mean",
-            })
-        .reset_index()
-    )
+    elif slice == "Gini":
+        ag_df = (
+            results_df.groupby(["Step", "living_cost", "resources_amount", "price_weight", "quality_weight", "sustainability_weight", "threshold"])
+            .agg({
+                "Gini": "mean",
+                })
+            .reset_index()
+        )
+    elif slice == "Score":
+        ag_df = (
+            results_df.groupby(["Step", "resources_amount", "price_weight", "quality_weight", "sustainability_weight"])
+            .agg({
+                "Max Score": ["min", "max"],
+                })
+            .reset_index()
+        )
 
-    product_results_df = (
-        results_df.groupby(["Step", "living_cost", "threshold"])
-        .agg({ 
-            "Designs in Progress": "mean", 
-            "Realized Designs": "mean", 
-            "Products in Progress": "mean",
-            "On-sale Products": "mean", 
-            "Sold Products": "mean",
-            })
-        .reset_index()
-    )
+    elif slice == "Products":
+        ag_df = (
+            results_df.groupby(["Step", "living_cost", "resources_amount", "price_weight", "quality_weight", "sustainability_weight","threshold"])
+            .agg({ 
+                "Designs in Progress": "mean", 
+                "Realized Designs": "mean", 
+                "Products in Progress": "mean",
+                "On-sale Products": "mean", 
+                "Sold Products": "mean",
+                "Resources": "mean",
+                })
+            .reset_index()
+        )
 
-    print(f"Head agents:\n{ag_res_df.head(3)}")
-    print(f"Tail agents:\n{ag_res_df.tail(3)}")
-    print(f"Head global:\n{ag_glob_df.head(3)}")
-    print(f"Tail global:\n{ag_glob_df.tail(3)}")
-    print(f"Head products:\n{product_results_df.head(3)}")
-    print(f"Tail products:\n{product_results_df.tail(3)}")
+    print(f"For slice {slice}:\n")
+    print(f"Head agents:\n{ag_df.head(3)}")
+    print(f"Tail agents:\n{ag_df.tail(3)}")
 
-    return ag_res_df, ag_glob_df, product_results_df
+    return ag_df
 
 
 def gen_stats(max_steps, range_weights, range_living_cost, range_threshold, ag_res_df):
@@ -185,6 +230,8 @@ def gen_stats(max_steps, range_weights, range_living_cost, range_threshold, ag_r
                 stats["sustainability_weight"][f"{sw}"] = stats["sustainability_weight"][f"{sw}"] + 1
                 stats["living_cost"][f"{lc}"] = stats["living_cost"][f"{lc}"] + 1
                 stats["threshold"][f"{t}"] = stats["threshold"][f"{t}"] + 1
+    
+    print(f"The param statistics:\n{stats}")
     return stats
                     
                 

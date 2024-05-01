@@ -1,20 +1,24 @@
+import gc
 import mesa
 
 from econsim.distmakingmodel import DistMakingModel
-from econsim.utils import generate_ranges, process_batch_results, gen_stats
+from econsim.utils import generate_ranges, results_to_df, process_batch_results, gen_stats
 from econsim.globals import set_debug
 
-def main(iterations, max_steps, step):
-    range_weights, _price_weight, _quality_ratio, range_living_cost, range_threshold, range_resources = generate_ranges(step)
+def main(iterations, max_steps, step, method):
+
+    range_weights, range_living_cost, range_threshold, range_resources = generate_ranges(weight_array=True)
 
 
-    params = {"designers": 90, 
-            "producers": 90, 
-            "initial_wealth":10, 
-            "weights": range_weights, 
-            "living_cost": range_living_cost, 
+    params = {
+            "method": method,
+            "designers": 60, 
+            "producers": 40, 
+            "initial_wealth":10,
+            "living_cost": range_living_cost,
+            "resources_amount": range_resources,
+            "weights": range_weights,
             "threshold": range_threshold,
-            "resources_amount": range_resources
             }
 
     # breakpoint()
@@ -30,12 +34,34 @@ def main(iterations, max_steps, step):
         display_progress=True,
     )
 
+    results_df = results_to_df(results)
 
-    ag_res_df, ag_glob_df, product_results_df = process_batch_results(results)
+    del results
+    gc.collect()
+    
+    score_df = process_batch_results(results_df, "Score")
+
+    price_weights = set([price_weight for price_weight, _quality_weight, _sustainability_weight in range_weights])
+    for resources_amount in range_resources:
+        for price_weight in price_weights:
+            slice = score_df.loc[
+                                    (score_df['resources_amount'] == resources_amount) &
+                                    (score_df['price_weight'] == price_weight)
+                                    ]
+            if len(slice) == 0:
+                continue
+            print(f"For resources_amount: {resources_amount}, price_weight: {price_weight}")
+            print(f"Min: {min(slice['Max Score']['min'])}, max: {max(slice['Max Score']['max'])}")
+    
+    breakpoint()
+    del score_df
+    gc.collect()
+    
+    
+    ag_res_df = process_batch_results(results_df,slice="Agents")
 
     stats = gen_stats(max_steps, range_weights, range_living_cost, range_threshold, ag_res_df)
 
-    print(f"The param statistics:\n{stats}")
 
     breakpoint()
     prod_df = ag_res_df.loc[(ag_res_df['AgentType'] == 'Producer') & (ag_res_df['Step'] == max_steps)]
@@ -113,5 +139,5 @@ if __name__ == "__main__":
         set_debug()
 
     main(
-            args.iterations, args.max_steps, args.step
+            args.iterations, args.max_steps, args.step, args.compensation
         )

@@ -16,14 +16,10 @@ class Producer(MakerAgent):
         self.worked_hours = 0
         # use design to produce
         if Work.get_len_realized_designs() > 0:
-            if not Resources.resourses_available() and self.sustainability_level < MAX_SUS:
-                # We are not sustainable and we cannot produce, so do nothing
-                return
+            if self.start_production():
+                self.is_busy = True
             else:
-                if self.start_production():
-                    self.is_busy = True
-                else:
-                    self.is_busy = False
+                self.is_busy = False
                 
     def work_is_done(self):
         # INTELLIGENCE REQUIRED!
@@ -43,25 +39,30 @@ class Producer(MakerAgent):
         # INTELLIGENCE REQUIRED!
         # Some strategy on what design to pick?
         # Now random
+        
         if Resources.resourses_available():
             # We can produce unsustainable designs
             idx = np.random.choice(Work.realized_designs)
             Work.start_production(self, idx)
             return True
         else:
-            # we need to find a sustainable design
-            found = False
-            for idx in Work.realized_designs:
-                work = Work.work_repository[f'{idx}']
-                if Resources.calculate_depletion(work.get_sustainability(hours=False), self.sustainability_level) > 0:
-                    # we cannot produce due to lack of resources
-                    continue
-                else:
-                    found = True
-                    break
-            if found:
-                Work.start_production(self, idx)
-                return True
+            if self.sustainability_level < MAX_SUS:
+                # We are not sustainable and we cannot produce because there are no resources, so do nothing
+                return False
+            else:
+                # we need to find a sustainable design
+                found = False
+                for idx in Work.realized_designs:
+                    work = Work.work_repository[f'{idx}']
+                    if Resources.calculate_depletion(work, self) > 0:
+                        # we cannot produce due to lack of resources
+                        continue
+                    else:
+                        found = True
+                        break
+                if found:
+                    Work.start_production(self, idx)
+                    return True
         return False
 
         
@@ -75,4 +76,4 @@ class Producer(MakerAgent):
     #         if a_work.get_hours() > max_hours:
     #             max_hours = a_work.get_hours()
     #             idx = i
-    #     return(idx)        
+    #     return idx        

@@ -72,7 +72,7 @@ agent_chart = mesa.visualization.BarChartModule(
     ]
 )
 
-_range_weights, price_weight, quality_ratio, range_living_cost, range_threshold, range_resources = generate_ranges(1)
+price_weight, quality_ratio, range_living_cost, range_threshold, range_resources = generate_ranges(weight_array=False)
 
 
 

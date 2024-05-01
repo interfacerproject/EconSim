@@ -1,7 +1,7 @@
 import numpy as np
 from .resources import Resources
 from .utils import agent_type
-from .globals import MAX_FEE, MIN_FEE
+from .globals import MAX_FEE, MIN_FEE, MAX_SUS, MIN_SUS, MAX_QUALITY, MIN_QUALITY
 
 class Work():
     # list of designs being worked on (being designed)
@@ -85,23 +85,23 @@ class Work():
     
     @classmethod
     def get_len_designs_in_progress(cls):
-        return(len(cls.designs_in_progress))
+        return len(cls.designs_in_progress)
 
     @classmethod
     def get_len_realized_designs(cls):
-        return(len(cls.realized_designs))
+        return len(cls.realized_designs)
 
     @classmethod
     def get_len_products_in_progress(cls):
-        return(len(cls.products_in_progress))
+        return len(cls.products_in_progress)
 
     @classmethod
     def get_len_on_sale_products(cls):
-        return(len(cls.on_sale_products))
+        return len(cls.on_sale_products)
 
     @classmethod
     def get_len_sold_products(cls):
-        return(len(cls.sold_products))
+        return len(cls.sold_products)
 
     @classmethod
     def get_avrg_contr_sold_goods(cls):        
@@ -178,7 +178,7 @@ class Work():
         # set_trace()
         work = cls.work_repository[f'{agent.working_on_id}']
         # set_trace()
-        work.material_cost = Resources.calculate_depletion(work.get_sustainability(hours=False), agent.sustainability_level)
+        work.material_cost = Resources.calculate_depletion(work, agent)
         cls.products_in_progress.remove(agent.working_on_id)
         cls.on_sale_products.append(agent.working_on_id)
         work.set_status("produced")
@@ -218,9 +218,11 @@ class Work():
         cls.tot_contributors += len(work.contributors)
         cls.tot_hours += sum(work.hours)
         cls.tot_prices += work.get_price()
-        cls.tot_quality_level += sum(work.quality_levels)
-        cls.tot_sustainability_level += sum(work.sustainability_levels)
+        cls.tot_quality_level += work.get_quality()
+        cls.tot_sustainability_level += work.get_sustainability()
         cls.tot_material_cost += work.material_cost
+        # if Resources.get_amount_resources() <= 0:
+        #     breakpoint()
 
 
         
@@ -243,18 +245,19 @@ class Work():
     def get_quality(self) -> float:
         quality = 0
         for i in range(len(self.hours)):
-            quality = quality + self.hours[i] * self.quality_levels[i]
+            quality = quality + self.hours[i] * (self.quality_levels[i]-(MAX_QUALITY+MIN_QUALITY)/2)
 
-        return(quality)
+        return quality
 
     def get_price(self) -> float:
         """
             Price is composite of labour cost + material cost
         """
         price = 0
+        # breakpoint()
         if Work.method == "producers":
-            for i in range(len(self.contributors)):
-                if agent_type(i) == "Producer":
+            for i, id in enumerate(self.contributors):
+                if agent_type(id) == "Producer":
                     price = price + self.hours[i]*self.hour_fees[i]
         elif Work.method == "equal":
             for i in range(len(self.contributors)):
@@ -265,17 +268,16 @@ class Work():
 
         price += self.material_cost
         
-        return(price)
+        return price
 
-    def get_sustainability(self, hours=True) -> float:
+    def get_sustainability(self) -> float:
+        # We assume that (MAX_SUS+MIN_SUS)/2 has 0 contribution to sustainability
         sustainability = 0
-        if hours:
-            for i in range(len(self.sustainability_levels)):
-                sustainability = sustainability + self.hours[i]*self.sustainability_levels[i]
-        else:
-                sustainability = np.mean(self.sustainability_levels)
 
-        return(sustainability)
+        for i in range(len(self.sustainability_levels)):
+            sustainability = sustainability + self.hours[i]*(self.sustainability_levels[i]-(MAX_SUS+MIN_SUS)/2)
+
+        return sustainability
     
     def set_status(self, status):
         self.status = status
