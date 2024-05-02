@@ -44,6 +44,15 @@ Depending on the redistribution scheme, the price of the product is
 
 There is also a **material cost** per product that increases the more the resources are consumed.
 
+# Installation
+
+1. Clone this repository to a directory and cd to it.
+2. Install python if not present. It is suggested to do so via virtual environment manager such as [miniconda](https://docs.anaconda.com/free/miniconda/).
+3. If using conda, create an environment, e.g. `conda create -n econsim python==3.11` and activate it `conda activate econsim`.
+4. Install [Jupyter notebook](https://jupyter.org/install): `pip install jupyterlab`
+5. Install various dependencies: `pip install mesa numpy pandas seaborn`
+6. Run the notebook ` ` and from the browser page that it launches open the file ``
+
 
 
 
