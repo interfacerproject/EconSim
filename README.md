@@ -49,9 +49,10 @@ There is also a **material cost** per product that increases the more the resour
 1. Clone this repository to a directory and cd to it.
 2. Install python if not present. It is suggested to do so via virtual environment manager such as [miniconda](https://docs.anaconda.com/free/miniconda/).
 3. If using conda, create an environment, e.g. `conda create -n econsim python==3.11` and activate it `conda activate econsim`.
-4. Install [Jupyter notebook](https://jupyter.org/install): `pip install jupyterlab`
+4. Install [Jupyter notebook](https://jupyter.org/install): `pip install notebook`
 5. Install various dependencies: `pip install mesa numpy pandas seaborn`
-6. Run the notebook ` ` and from the browser page that it launches open the file ``
+6. Run the notebook `jupyter notebook` and from the browser page that it launches open the file `faircontr_int.ipynb`
+7. Run the notebook and at the last cell you can run the simulation, change the parameters, etc.
 
 
 
