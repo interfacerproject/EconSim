@@ -51,10 +51,14 @@ There is also a **material cost** per product that increases the more the resour
 3. If using conda, create an environment, e.g. `conda create -n econsim python==3.11` and activate it `conda activate econsim`.
 4. Install [Jupyter notebook](https://jupyter.org/install): `pip install notebook`
 5. Install various dependencies: `pip install mesa numpy pandas seaborn`
-6. Run the notebook `jupyter notebook` and from the browser page that it launches open the file `faircontr_int.ipynb`
+6. Run the notebook `jupyter notebook` and from the browser page that it launches open the file `faircontr_int.ipynb`, which is the main simulation
 7. Run the notebook and at the last cell you can run the simulation, change the parameters, etc.
 
+The repository also contains two other notebooks:
+1. `faircontr_expl.ipynb`, run simulations as a batch and displays some graphs, work in progress
+2. `money_model.ipynb` is the simulation taken from the [mesa tutorial](https://mesa.readthedocs.io/en/stable/tutorials/intro_tutorial.html) on the Boltzmann model of wealth distribution
 
+Batch simulations can also be run with `python main.py`, have a look at the code to see what parameters can be given.
 
 
 
