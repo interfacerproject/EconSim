@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import gc
+from pdb import set_trace
 
 from .globals import get_debug
 
@@ -8,9 +9,9 @@ from .globals import PRODUCERS_ID_OFFSET
 
 # calculate the gini coefficient of inequality
 def compute_gini(model):
-    agent_wealths = [agent.wealth for agent in model.schedule.agents]
+    agent_wealths = [agent.wealth for agent in model.agents]
     x = sorted(agent_wealths)
-    N = len(model.schedule.agents)
+    N = len(model.agents)
     if sum(x) == 0:
         if get_debug():
             print("Sum of agents Wealth is zero")
@@ -21,7 +22,7 @@ def compute_gini(model):
     return res
 
 # def compute_gini(model)->float:
-#     agent_wealths = [agent.wealth for agent in model.schedule.agents]
+#     agent_wealths = [agent.wealth for agent in model.agents]
 #     x = np.sort(agent_wealths)
 #     N = len(x)
 #     cumx = np.cumsum(x, dtype=float)
@@ -109,6 +110,7 @@ def results_to_df(results):
     
     # make esplicit some parameters
     results_df["AgentType"], results_df["Alive"], results_df["price_weight"], results_df["quality_weight"], results_df["sustainability_weight"] = \
+    set_trace()
     zip(*results_df.apply(lambda row : (agent_type(row['AgentID']),row.Wealth>0, *row.weights), axis=1))
 
     print(f"Keys in results: {results_df.keys()}")

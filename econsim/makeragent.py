@@ -5,9 +5,9 @@ from .globals import MIN_QUALITY, MAX_QUALITY, MIN_SUS, MAX_SUS, MIN_FEE, MAX_FE
 class MakerAgent(mesa.Agent):
     """An agent in the FabLabs ecosystem"""
 
-    def __init__(self, unique_id, model, initial_wealth, living_cost):
+    def __init__(self, model, initial_wealth, living_cost):
         # Pass the parameters to the parent class.
-        super().__init__(unique_id, model)
+        super().__init__(model)
 
         # 
         self.wealth = initial_wealth

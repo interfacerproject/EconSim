@@ -35,7 +35,6 @@ class DistMakingModel(mesa.Model):
         self.initial_wealth = initial_wealth
         self.living_cost = living_cost
         
-        self.schedule = mesa.time.RandomActivation(self)
         width = int(math.sqrt(designers+producers))+1
         height = width
         self.grid = mesa.space.MultiGrid(width, height, torus=True)
@@ -45,15 +44,13 @@ class DistMakingModel(mesa.Model):
         
         # Create agents
         count = 0
-        for i in range(DESIGNERS_ID_OFFSET, DESIGNERS_ID_OFFSET + designers):
-            a = Designer(i, self, initial_wealth, living_cost)
-            self.schedule.add(a)
+        for _i in range(DESIGNERS_ID_OFFSET, DESIGNERS_ID_OFFSET + designers):
+            a = Designer(self, initial_wealth, living_cost)
             self.grid.place_agent(a, (count%width, int(count/height)))
             count = count + 1
 
-        for i in range(PRODUCERS_ID_OFFSET, PRODUCERS_ID_OFFSET + producers):
-            a = Producer(i, self, initial_wealth, living_cost)
-            self.schedule.add(a)
+        for _i in range(PRODUCERS_ID_OFFSET, PRODUCERS_ID_OFFSET + producers):
+            a = Producer(self, initial_wealth, living_cost)
             self.grid.place_agent(a, (count%width, int(count/height)))
             count = count + 1
 
@@ -86,7 +83,7 @@ class DistMakingModel(mesa.Model):
     def step(self):
         """Advance the model by one step."""
         self.datacollector.collect(self)
-        self.schedule.step()
+        self.agents.shuffle_do("step")
 
         self.market.step()
 
@@ -99,7 +96,7 @@ class DistMakingModel(mesa.Model):
     def alive_professionals(self):
         designers_alive = False
         producers_alive = False
-        for agent in self.schedule.agents:
+        for agent in self.agents:
             if agent.wealth > 0:
                 ag_typ = agent_type(agent.unique_id)
                 if ag_typ == "Designer":
@@ -112,7 +109,7 @@ class DistMakingModel(mesa.Model):
 
 
     def find_agent(self, id):
-        for agent in self.schedule.agents:
+        for agent in self.agents:
             if agent.unique_id == id:
                 return agent
         return None
